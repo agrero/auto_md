@@ -1,0 +1,96 @@
+#####################
+#### Directories ####
+#####################
+
+>pdb directory (path): 
+>config directory (path): 
+>out directories (list): 
+>tleap code directories (path): 
+>simulation script directory (path): 
+>python codes (path): 
+
+####################
+#### File Names ####
+####################
+
+>pdb_name (filename): 
+>run_name (string): 
+
+############################
+#### Ion Concentrations ####
+############################
+
+>ion concentrations: 
+>ion types (same order): 
+>neutralize system (boolean): 
+
+################
+#### Header ####
+################
+
+>account: 
+>email: 
+>default header path: 
+
+#######################
+#### EM Components ####
+#######################
+
+>em partition:
+>em time:
+>em ntasks-per-node: 
+>em mem: 
+>em nodes: 
+>em cpus-per-node: 
+
+############################
+#### Heating Components ####
+############################
+
+>heating partition:
+>heating time: 
+>heating ntasks-per-node:
+>heating mem:
+>heating nodes: 
+>heating cpus-per-node:
+
+##########################
+#### NPTeq Components ####
+##########################
+
+>npteq partition:
+>npteq time:
+>npteq ntasks-per-node:
+>npteq mem: 
+>npteq nodes: 
+>npteq cpus-per-node: 
+
+###############################
+#### Production Components ####
+###############################
+
+>production partition:
+>production time: 
+>production ntasks-per-node: 
+>production gpus-per-task: 
+>production mem: 
+>production nodes: 
+>production cpus-per-node: 
+
+#######################################
+#### Production Restart Components ####
+#######################################
+
+>production restart partition: 
+>production restart time:
+>production restart ntasks-per-node: 
+>production restart gpus-per-task: 
+>production restart mem: 
+>production restart nodes: 
+>production restart cpus-per-node: 
+
+##############
+#### Misc ####
+##############
+
+>contains dna (boolean): 
