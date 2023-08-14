@@ -60,5 +60,16 @@ so the general pattern is **cation** : **anion** and the order of which should m
 ! for later iterations we will make a chemical formula parser for simpler ion type entry !
 
 ## header 
-specifically for a slurm job header, a template of what this looks like is available in **codes/**
+specifically for a slurm job header, a template of what this looks like is available in **codes/headers**
+this just adds the email for the job starting and finishing
+the account is for which account to be charged
+the header path should point to whichever header you're going to be using
+
+## components
+these components are specifically for controlling a slurm managed job's resources
+
+## misc
+
+### contains dna 
+adds the OB21 force field during the system setup phase using tleap
 
