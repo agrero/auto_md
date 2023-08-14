@@ -1,0 +1,24 @@
+Heat
+ &cntrl
+  imin=0,  ! no minimization
+  ntx=1,     ! Read coordinates but not velocities from ASCII formatted rst7 coordinate file
+  irest=0,   ! do not restart simulation
+  nstlim=10000,     ! these two gives the time
+  dt=0.002,      
+  ntf=2,       ! Setting to not calculate force for SHAKE constrained bonds
+  ntc=2,        ! Enable SHAKE to constrain all bonds involving hydrogen
+  tempi=0.0,    ! initial
+  temp0=300.0,   ! final
+  ntpr=100,     ! track in mdout
+  ntwx=100,        ! amber mdcrd traj file
+  cut=8.0,     ! nonbonded cutoff distance 
+  ntb=1,        ! PB for const V
+  ntp=0,        ! no pressure control
+  ntt=3,       ! temp control with Langevin thermostat
+  gamma_ln=2.0,  ! Langevin thermostat collision frequency
+  nmropt=1,    ! NMR restraints and weight changes read
+  ig=-1,       ! Randomize the seed for the pseudo-random number generator
+ /
+&wt type='TEMP0', istep1=0, istep2=9000, value1=0.0, value2=300.0 /
+&wt type='TEMP0', istep1=9001, istep2=10000, value1=300.0, value2=300.0 /
+&wt type='END' /

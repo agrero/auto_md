@@ -1,0 +1,13 @@
+#!/bin/bash
+#SBATCH --job-name={md_type}-{run_name}
+#SBATCH --nodes={nodes}
+#SBATCH --mem={mem}G
+#SBATCH --partition={partition}
+#SBATCH --time={time}
+#SBATCH --error=out/{md_type}-err-{run_name}
+#SBATCH --out=out/{md_type}-out-{run_name}
+#SBATCH --ntasks-per-node={ntasks_per_node}
+#SBATCH --mail-type=end
+#SBATCH --mail-user={email}
+#SBATCH --export=ALL
+#SBATCH --account={account}
