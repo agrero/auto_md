@@ -156,6 +156,9 @@ python3 {config_dir}/tleap_solvate.py -p {start_dir}/{run_name}.pdb -c {config_d
 
 tleap -s -f {config_dir}/tleap.in > {out_dir}/tleap.out
 
+python3 {config_dir}/tleap_read_volume.py -c {args.config} -to {out_dir}/tleap.out \\
+    -o {start_dir} -cond {config_dir}
+
 # Energy Minimization
 
 # importing all scripts for running simulations 
