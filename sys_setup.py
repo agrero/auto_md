@@ -160,7 +160,7 @@ python3 {config_dir}/tleap_solvate.py -p {start_dir}/{run_name}.pdb -c {config_d
 tleap -s -f {config_dir}/solvate_tleap.in > {out_dir}/tleap.out
 
 python3 {config_dir}/tleap_read_volume.py -to {out_dir}/tleap.out -c ../{args.config} \\
-    -cond {config_dir} -p {pdb_dir}/{pdb}
+    -cond {config_dir} -p {start_dir}/{run_name}.pdb 
 
 tleap -s -f {config_dir}/tleap.in
 
@@ -178,8 +178,8 @@ mv ../amber_prod_restart.sh     prod_restart.sh
 
 echo 'starting job'
 
-#sbatch amber_em.sh {em_dir} {start_dir} {config_dir} \\
-#    {run_name} {heating_dir} {npt_dir} {out_dir}"""
+sbatch amber_em.sh {em_dir} {start_dir} {config_dir} \\
+    {run_name} {heating_dir} {npt_dir} {out_dir}"""
 
 
 em_path = f"{sim_script_dir}_no_head/amber_em.sh"
