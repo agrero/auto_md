@@ -51,7 +51,7 @@ currently only accepts compounds with 2 species **(Mg is the only currently acce
 example:
 > ion concentrations: 150: 6
 
-> ion types: Na : Cl : Mg : Cl
+> ion types: (Na,Cl) : (Mg,Cl)
 
 this will add 150 mM NaCl to your system in addition to 6mM MgCl2
 
@@ -73,3 +73,11 @@ these components are specifically for controlling a slurm managed job's resource
 ### contains dna 
 adds the OB21 force field during the system setup phase using tleap
 
+## future wants/dreams
+- make changes so that it can also be run on expanse/locally
+    - mostly involve allowing for amber function calls to be different (i'm looking at you mpi)
+- all filepaths be run through a custom implementation of the os module
+    - makes handling different filetypes easier regardless of operating system
+    - custom implementation mostly is in regards to handling local/./global imports
+- functionalize a lot of the repeated code
+- oopify the whole thing
