@@ -1,4 +1,5 @@
 import argparse
+import os
 
 parser = argparse.ArgumentParser(
     prog='system setup',
@@ -32,6 +33,8 @@ except:
 account=config_dict['account']
 email=config_dict['email']
 header_path=config_dict['default header path']
+
+# filenames
 
 # pdbs 
 pdb_dir = config_dict['pdb directory (path)']
@@ -138,15 +141,15 @@ mkdir {start_dir} {config_dir} {out_dir} {em_dir} {heating_dir} {npt_dir} {prod_
 
 # fetch all necessary amber configs
 
-cp {config_storage}/in.classical_heating {config_dir}/    # Heating
-cp {config_storage}/in.npt               {config_dir}/    # NPT
-cp {config_storage}/prod5ns.in           {config_dir}/    # Production
-cp {config_storage}/sander_min.in        {config_dir}/    # Energy Minimization
+cp {config_storage}/"in.classical_heating"   {config_dir}
+cp {config_storage}/"in.npt"                 {config_dir}
+cp {config_storage}/"prod5ns.in"             {config_dir}
+cp {config_storage}/"sander_min.in"          {config_dir}
 
 # get tleap.in file makers
 
 cp {tleap_dir}/tleap_solvate.py        {config_dir}/tleap_solvate.py
-cp {pycode_dir}/tleap_read_volume.py    {config_dir}/tleap_read_volume.py
+cp {pycode_dir}/tleap_read_volume.py   {config_dir}/tleap_read_volume.py
 
 # convert pdb to amber pdb
 
@@ -154,23 +157,29 @@ pdb4amber -i {pdb_dir}/{pdb} -o {start_dir}/{run_name}.pdb -y
 
 python3 {config_dir}/tleap_solvate.py -p {start_dir}/{run_name}.pdb -c {config_dir} 
 
-tleap -s -f {config_dir}/tleap.in > {out_dir}/tleap.out
+tleap -s -f {config_dir}/solvate_tleap.in > {out_dir}/tleap.out
 
-python3 {config_dir}/tleap_read_volume.py -c {args.config} -to {out_dir}/tleap.out \\
-    -o {start_dir} -cond {config_dir}
+python3 {config_dir}/tleap_read_volume.py -to {out_dir}/tleap.out -c ../{args.config} \\
+    -cond {config_dir} -p {pdb_dir}/{pdb}
+
+tleap -s -f {config_dir}/tleap.in
+
+mv leap.log out/
 
 # Energy Minimization
 
 # importing all scripts for running simulations 
 ## in the future will allow for custom script integration
-mv amber_em.sh              {run_name}/amber_em.sh
-mv amber_heating.sh         {run_name}/amber_heating.sh
-mv amber_npteq.sh           {run_name}/amber_npteq.sh
-mv amber_prod.sh            {run_name}/amber_prod.sh
-mv amber_prod_restart.sh    {run_name}/prod_restart.sh
+mv ../amber_em.sh               amber_em.sh
+mv ../amber_heating.sh          amber_heating.sh
+mv ../amber_npteq.sh            amber_npteq.sh
+mv ../amber_prod.sh             simul.sh
+mv ../amber_prod_restart.sh     prod_restart.sh
 
-sbatch amber_em.sh {em_dir} {start_dir} {config_dir} \\
-    {run_name} {heating_dir} {npt_dir} {out_dir}"""
+echo 'starting job'
+
+#sbatch amber_em.sh {em_dir} {start_dir} {config_dir} \\
+#    {run_name} {heating_dir} {npt_dir} {out_dir}"""
 
 
 em_path = f"{sim_script_dir}_no_head/amber_em.sh"
@@ -179,7 +188,7 @@ md_steps = ['em', 'heating', 'npteq', 'prod', 'prod_restart']
 for step in md_steps:
     path = f"{sim_script_dir}_no_head/amber_{step}.sh" # what path amigo
 
-    with open(header_path, 'r') as f: # will need to change header so all parameters are mutable
+    with open(f'/{header_path}', 'r') as f: # will need to change header so all parameters are mutable
         header = f.read().format(md_type=step, # ORGANIZE MEEEEEEEEEEEEEEEE
                                 run_name=run_name, 
                                 email=email, 
@@ -191,7 +200,7 @@ for step in md_steps:
                                 ntasks_per_node=run_cond[step]['ntasks_per_node'])
         if 'prod' in step:
             header += f"\n#SBATCH --gpus-per-task={run_cond[step]['gpus-per-task']}"
-    with open(path, 'r') as f:
+    with open(f'/{path}', 'r') as f:
         text = f.read()
 
     with open(f'amber_{step}.sh', 'w') as w:
@@ -199,3 +208,5 @@ for step in md_steps:
 
 with open('sys_setup.sh', 'w') as w:
     w.write(new_text)
+
+os.system("bash sys_setup.sh")
