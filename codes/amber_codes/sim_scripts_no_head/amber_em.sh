@@ -13,7 +13,8 @@ run_name=$4
 # for subsequent runs (has to be a more efficient way to do this)
 heating_dir=$5
 npt_dir=$6
-prod_dir=$7
+out_dir=$7
+prod_dir=$8
 
 
 nohup sander -O -i ${config_dir}/sander_min.in -o ${em_dir}/min.out \

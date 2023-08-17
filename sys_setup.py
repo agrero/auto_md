@@ -43,7 +43,7 @@ run_name = config_dict['run_name (string)']
 
 # configs
 config_storage = config_dict['config directory (path)']
-
+## should really make this into a nested dictionary
 start_dir=config_dict['out directories (list)'][0]
 config_dir=config_dict['out directories (list)'][1]
 out_dir=config_dict['out directories (list)'][2]
@@ -160,7 +160,7 @@ python3 {config_dir}/tleap_solvate.py -p {start_dir}/{run_name}.pdb -c {config_d
 tleap -s -f {config_dir}/solvate_tleap.in > {out_dir}/tleap.out
 
 python3 {config_dir}/tleap_read_volume.py -to {out_dir}/tleap.out -c ../{args.config} \\
-    -cond {config_dir} -p {start_dir}/{run_name}.pdb 
+    -cond {config_dir} -p {pdb_dir}/{pdb}
 
 tleap -s -f {config_dir}/tleap.in
 
@@ -173,13 +173,13 @@ mv leap.log out/
 mv ../amber_em.sh               amber_em.sh
 mv ../amber_heating.sh          amber_heating.sh
 mv ../amber_npteq.sh            amber_npteq.sh
-mv ../amber_prod.sh             simul.sh
-mv ../amber_prod_restart.sh     prod_restart.sh
+mv ../amber_prod.sh             amber_prod.sh
+mv ../amber_prod_restart.sh     amber_prod_restart.sh
 
 echo 'starting job'
 
 sbatch amber_em.sh {em_dir} {start_dir} {config_dir} \\
-    {run_name} {heating_dir} {npt_dir} {out_dir}"""
+    {run_name} {heating_dir} {npt_dir} {out_dir} {prod_dir}"""
 
 
 em_path = f"{sim_script_dir}_no_head/amber_em.sh"
