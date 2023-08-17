@@ -81,3 +81,5 @@ adds the OB21 force field during the system setup phase using tleap
     - custom implementation mostly is in regards to handling local/./global imports
 - functionalize a lot of the repeated code
 - oopify the whole thing
+- error handling from the configuration file, makes sure that if the correct number
+of options is not inputted, the program will just put/read everything from the main directory
