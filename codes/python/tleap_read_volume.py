@@ -45,10 +45,8 @@ ion_types = config_dict['ion types (same order)']
 # format ion components based on how many their are
 if type(ion_types) != list:
     ion_types = ion_types.strip(' ').strip('()').split(',')
-    print(ion_types)
 else: 
     ion_types = [ion.strip(' ').strip('()').split(',') for ion in ion_types]
-    print(ion_types)
 
 # get volume from previous step
 with open(args.tleap_out, 'r') as f:
@@ -77,11 +75,13 @@ if type(ion_concentrations) == list:
 
         if ion_types[ndx][0] == 'Mg': # be more clever later
             line = f'addIonsRand system {ion_types[ndx][0]} {round(no_ions)} {ion_types[ndx][1]} {2*round(no_ions)}'    
-
+            #no_ions_lines.append(line)
         else:
             line = f'addIonsRand system {ion_types[ndx][0]} {round(no_ions)} {ion_types[ndx][1]} {round(no_ions)}'
-
+            #no_ions_lines.append(line)
+        
         no_ions_lines.append(line)
+
 
 ## this should be the else but if you cant tell i was rushing
 
@@ -99,6 +99,10 @@ else:
     else:
         line = f'addIonsRand system {ion_types[0]} {round(no_ions)} {ion_types[1]} {round(no_ions)}'
 
+    no_ions_lines.append(line)
+
+print('\nLOOKIE HERE\n')
+print(no_ions_lines)
 # write the final tleap configuration file
 
 with open(os.path.join(args.config_dir, 'tleap.in'), 'w') as f:
@@ -121,6 +125,7 @@ solvateBox system TIP3PBOX 14 iso\n""")
         f.write('addIonsRand system Na+ 0\n')
 
     for line in no_ions_lines:
+        print(line)
         f.write(f'{line}\n')
 
     ## change this to take directories from the contig file
