@@ -51,13 +51,16 @@ currently only accepts compounds with 2 species **(Mg is the only currently acce
 example:
 > ion concentrations: 150: 6
 
-> ion types: (Na,Cl) : (Mg,Cl)
+> ion types: (Na+,Cl-) : (Mg,Cl-)
 
 this will add 150 mM NaCl to your system in addition to 6mM MgCl2
 
 so the general pattern is **cation** : **anion** and the order of which should match the concentrations
 
 ! for later iterations we will make a chemical formula parser for simpler ion type entry !
+
+for an unknown reason, monovalent ions need to have charges associated with them! Mg seems to work fine as 
+just itself
 
 ## header 
 specifically for a slurm job header, a template of what this looks like is available in **codes/headers**
