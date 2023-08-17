@@ -43,7 +43,7 @@ done
 
 if [ $K -lt 200]
 then
-    sbatch prod_restart.sh ${prod_dir} ${start_dir} ${config_dir} ${run_name} ${K}
+    sbatch amber_prod_restart.sh ${prod_dir} ${start_dir} ${config_dir} ${run_name} ${K}
     exit
 else
     echo 'jobs done'

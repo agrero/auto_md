@@ -41,6 +41,6 @@ for ((K=1;K<=20;K++)); do
     cp ${prod_dir}/prod5ns.rst7  ${prod_dir}/input.rst7
 done
 
-sbatch prod_restart.sh ${prod_dir} ${start_dir} ${config_dir} ${run_name} ${K}
+sbatch amber_prod_restart.sh ${prod_dir} ${start_dir} ${config_dir} ${run_name} ${K}
 
 exit
