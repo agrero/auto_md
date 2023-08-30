@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --partition=longgpu
-#SBATCH --job-name=prod-%j
+#SBATCH --job-name=prod5
 #SBATCH --time=8-00:00:00
 #SBATCH --mem=16G
 #SBATCH --gpus-per-task=1
@@ -11,7 +11,7 @@
 #SBATCH --mail-type=begin
 #SBATCH --mail-type=end
 #SBATCH --account=guenzagrp
-#SBATCH --error=out/joberrAmber-%j
+#SBATCH --error=joberrAmber
 
 source /gpfs/projects/guenzagrp/shared/amber22/amber.sh
 module purge
@@ -35,13 +35,13 @@ echo
 
 prod_dir=$1
 start_dir=$2
-config_dir=$3
-run_name=$4
-iter=$5
+heating_dir=$3
+config_dir=$4
+run_name=$5
 
-echo "restarting from iteration ${iter}"
+cp ${heating_dir}/${run_name}_md_heat.rst7 ${prod_dir}/input.rst7
 
-for ((K=${iter};K<=$((${iter}+20));K++)); do
+for ((K=1;K<=20;K++)); do
     cd $BD
     srun pmemd.cuda.MPI -O -i ${config_dir}/prod5ns.in \
     -o ${prod_dir}/prod5ns.out -p ${start_dir}/${run_name}_solv.parm7 \
@@ -56,12 +56,6 @@ for ((K=${iter};K<=$((${iter}+20));K++)); do
     cp ${prod_dir}/prod5ns.rst7  ${prod_dir}/input.rst7
 done
 
-if [ $K -lt 200]
-then
-    sbatch prod_restart.sh ${prod_dir} ${start_dir} ${config_dir} ${run_name} ${K}
-    exit
-else
-    echo 'jobs done'
-    exit
-fi
+sbatch amber_prod_restart.sh ${prod_dir} ${start_dir} ${config_dir} ${run_name} ${K}
 
+exit

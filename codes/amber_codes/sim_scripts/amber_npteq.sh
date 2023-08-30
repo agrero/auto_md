@@ -33,4 +33,4 @@ nohup sander -O -i ${config_dir}/in.npt -o ${out_dir}/npt.out -p ${start_dir}/${
 
 cp /home/aguerre2/guenzagrp/codes/amber_codes/sim_codes/prod5ns.in ${config_dir}/prod5ns.in
 
-sbatch simul.sh ${prod_dir} ${start_dir} ${heating_dir} ${config_dir} ${run_name}
+sbatch amber_prod.sh ${prod_dir} ${start_dir} ${heating_dir} ${config_dir} ${run_name}
