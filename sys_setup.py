@@ -160,7 +160,7 @@ python3 {config_dir}/tleap_solvate.py -p {start_dir}/{run_name}.pdb -c {config_d
 tleap -s -f {config_dir}/solvate_tleap.in > {out_dir}/tleap.out
 
 python3 {config_dir}/tleap_read_volume.py -to {out_dir}/tleap.out -c ../{args.config} \\
-    -cond {config_dir} -p {pdb_dir}/{pdb}
+    -cond {config_dir} -p {start_dir}/{run_name}.pdb
 
 tleap -s -f {config_dir}/tleap.in
 

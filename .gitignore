@@ -1,3 +1,4 @@
 testing/*
 ignore_config.in
 __pycache__
+*.pdb

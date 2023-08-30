@@ -72,8 +72,9 @@ if type(ion_concentrations) == list:
 
         # special checks for divalent cations (currently only Mg)
         ## just have a constants file where all the di/tri/quad(?)valent ions are in a list (see truth testing later)
-
-        if ion_types[ndx][0] == 'Mg': # be more clever later
+        print(ion_types[ndx][0])
+        if ion_types[ndx][0] in ['Mg', 'mg', 'MG']: # be more clever later
+            print(ion_types[ndx][0])
             line = f'addIonsRand system {ion_types[ndx][0]} {round(no_ions)} {ion_types[ndx][1]} {2*round(no_ions)}'    
             #no_ions_lines.append(line)
         else:
@@ -102,6 +103,7 @@ else:
     no_ions_lines.append(line)
 
 print('\nLOOKIE HERE\n')
+print(f'ions: {ion_concentrations}')
 print(no_ions_lines)
 # write the final tleap configuration file
 
