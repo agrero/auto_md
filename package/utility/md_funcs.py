@@ -33,3 +33,13 @@ def read_sysconfig(config_path):
     ## might be easier to split up the config file
     ## however if it's in a memory loaded object it should just open just as fast
     return config_dict
+
+def format_filepath(filepath, delineator='/'):
+    """Formats a filepath seperated by a given delineator
+    returns the filepath with the given operatings systems 
+    correct format per the users operating system"""
+    import os
+    
+    # creates a list from splitting a string and unpacks it
+    return os.path.join(*filepath.split(delineator))
+

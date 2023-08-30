@@ -25,7 +25,7 @@ these are: energy minimization (em), heating, npt (or nvt), and production (prod
 there are the start, out, and config directories. the start directory mainly handles the inputs into the energy 
 miniimzation step as well as storing a copy of the input pdb, the out directory mainly is for slurm outputs to
 keep each directory clean. the order in which these are inputed are:
-start : config : out : em : heating : npt : production
+> start : config : out : em : heating : npt : production
 note the colons are used to seperate each instance, think of it as a comma for a list
 
 ### tleap code directories (read)
