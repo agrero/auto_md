@@ -94,7 +94,7 @@ else:
     no_atoms = int(ion_concentrations) / (10 ** 3) * (6.022 * 10 ** 23)
     no_ions = (no_atoms * volume_l)
     
-    if ion_types[0] == 'Mg':
+    if ion_types[0] in ['Mg', 'mg', 'MG']:
         line = f'addIonsRand system {ion_types[0]} {round(no_ions)} {ion_types[1]} {2*round(no_ions)}'
     else:
         line = f'addIonsRand system {ion_types[0]} {round(no_ions)} {ion_types[1]} {round(no_ions)}'
