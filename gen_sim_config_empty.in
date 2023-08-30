@@ -2,9 +2,9 @@
 #### Directories ####
 #####################
 
->pdb directory (path): 
->config directory (path): 
->out directories (list): 
+>pdb_dir: 
+>config_dir:
+>out_dirs:
 >tleap code directories (path): 
 >simulation script directory (path): 
 >python codes (path): 

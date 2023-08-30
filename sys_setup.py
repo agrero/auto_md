@@ -181,9 +181,6 @@ echo 'starting job'
 sbatch amber_em.sh {em_dir} {start_dir} {config_dir} \\
     {run_name} {heating_dir} {npt_dir} {out_dir} {prod_dir}"""
 
-
-em_path = f"{sim_script_dir}_no_head/amber_em.sh"
-
 md_steps = ['em', 'heating', 'npteq', 'prod', 'prod_restart']
 for step in md_steps:
     path = f"{sim_script_dir}_no_head/amber_{step}.sh" # what path amigo
