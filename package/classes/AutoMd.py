@@ -50,7 +50,6 @@ class AutoMd:
         from ..utility.md_funcs import read_sysconfig
 
         config_dict = read_sysconfig(self.config_file)
-        print(self.__dict__)
 
         # matching attributes and config inputs
         att_key_match = [i for i in config_dict if i in self.__dict__]
