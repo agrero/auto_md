@@ -30,32 +30,32 @@ except:
 # i'm going to need to split this up like i have the .in structured
 
 # header info
-account=config_dict['account']
-email=config_dict['email']
-header_path=config_dict['default header path']
-
-# filenames
+account = config_dict['account']
+email = config_dict['email']
+header_path = os.path.join(config_dict['auto_md directory'], 'codes', 'headers', 'slurm.head')
 
 # pdbs 
-pdb_dir = config_dict['pdb directory (path)']
-pdb = config_dict['pdb_name (filename)']
-run_name = config_dict['run_name (string)']
+pdb_dir = config_dict['pdb directory']
+pdb = config_dict['pdb name']
+run_name = config_dict['run name']
 
 # configs
-config_storage = config_dict['config directory (path)']
+force_fields = os.path.join(config_dict['auto_md directory'], 'codes', 'amber_codes', 'sim_codes')
+
 ## should really make this into a nested dictionary
-start_dir=config_dict['out directories (list)'][0]
-config_dir=config_dict['out directories (list)'][1]
-out_dir=config_dict['out directories (list)'][2]
-em_dir=config_dict['out directories (list)'][3]
-heating_dir=config_dict['out directories (list)'][4]
-npt_dir=config_dict['out directories (list)'][5]
-prod_dir=config_dict['out directories (list)'][6]
 
-tleap_dir=config_dict['tleap code directories (path)']
-pycode_dir=config_dict['python codes (path)']
+start_dir=config_dict['out directories'][0]
+config_dir=config_dict['out directories'][1]
+out_dir=config_dict['out directories'][2]
+em_dir=config_dict['out directories'][3]
+heating_dir=config_dict['out directories'][4]
+npt_dir=config_dict['out directories'][5]
+prod_dir=config_dict['out directories'][6]
 
-sim_script_dir=config_dict['simulation script directory (path)']
+tleap_dir = os.path.join(config_dict['auto_md directory'], 'codes', 'tleap')
+pycode_dir = os.path.join(config_dict['auto_md directory'], 'codes', 'python')
+
+sim_script_dir = os.path.join(config_dict['auto_md directory', 'codes', 'amber_codes', 'sim_scripts']) #config_dict['simulation script directory']
 
 # run condiitons
 run_cond = {
@@ -112,8 +112,10 @@ new_text = f"""#!/bin/bash
 
 # directories for pdbs and amber sim codes
 
+set -e
+
 pdb_dir={pdb_dir}
-config_storage={config_storage}
+force_fields={force_fields}
 
 pdb={pdb}
 run_name={run_name}
@@ -141,10 +143,10 @@ mkdir {start_dir} {config_dir} {out_dir} {em_dir} {heating_dir} {npt_dir} {prod_
 
 # fetch all necessary amber configs
 
-cp {config_storage}/"in.classical_heating"   {config_dir}
-cp {config_storage}/"in.npt"                 {config_dir}
-cp {config_storage}/"prod5ns.in"             {config_dir}
-cp {config_storage}/"sander_min.in"          {config_dir}
+cp {force_fields}/"in.classical_heating"   {config_dir}
+cp {force_fields}/"in.npt"                 {config_dir}
+cp {force_fields}/"prod5ns.in"             {config_dir}
+cp {force_fields}/"sander_min.in"          {config_dir}
 
 # get tleap.in file makers
 
@@ -155,9 +157,13 @@ cp {pycode_dir}/tleap_read_volume.py   {config_dir}/tleap_read_volume.py
 
 pdb4amber -i {pdb_dir}/{pdb} -o {start_dir}/{run_name}.pdb -y 
 
+# get volume of the box as well as charge
+
 python3 {config_dir}/tleap_solvate.py -p {start_dir}/{run_name}.pdb -c {config_dir} 
 
 tleap -s -f {config_dir}/solvate_tleap.in > {out_dir}/tleap.out
+
+# solvate the box with salt concentrations as determined by previous step
 
 python3 {config_dir}/tleap_read_volume.py -to {out_dir}/tleap.out -c ../{args.config} \\
     -cond {config_dir} -p {start_dir}/{run_name}.pdb
@@ -176,11 +182,12 @@ mv ../amber_npteq.sh            amber_npteq.sh
 mv ../amber_prod.sh             amber_prod.sh
 mv ../amber_prod_restart.sh     amber_prod_restart.sh
 
-echo 'starting job'
-
 sbatch amber_em.sh {em_dir} {start_dir} {config_dir} \\
     {run_name} {heating_dir} {npt_dir} {out_dir} {prod_dir}"""
 
+
+# write the amber scripts
+## we can add the formatting thing here
 md_steps = ['em', 'heating', 'npteq', 'prod', 'prod_restart']
 for step in md_steps:
     path = f"{sim_script_dir}_no_head/amber_{step}.sh" # what path amigo
@@ -203,7 +210,11 @@ for step in md_steps:
     with open(f'amber_{step}.sh', 'w') as w:
         w.write(f"{header}\n{text}")
 
+# write the system setup files
 with open('sys_setup.sh', 'w') as w:
     w.write(new_text)
 
-os.system("bash sys_setup.sh")
+if config_dict['start here end there'] in ['t', 'T', 'True', 'true']:
+    os.system(f"scp -r {run_name} {remote_user}@{remote_host}:{config_dict['remote directory']}")
+else:
+    os.system("bash sys_setup.sh")

@@ -26,6 +26,8 @@ iter=$5
 
 echo "restarting from iteration ${iter}"
 
+set -e
+
 for ((K=${iter};K<=$((${iter}+20));K++)); do
     cd $BD
     srun pmemd.cuda.MPI -O -i ${config_dir}/prod5ns.in \
@@ -41,7 +43,7 @@ for ((K=${iter};K<=$((${iter}+20));K++)); do
     cp ${prod_dir}/prod5ns.rst7  ${prod_dir}/input.rst7
 done
 
-if [ $K -lt 200]
+if [ $K -lt 200 ]
 then
     sbatch amber_prod_restart.sh ${prod_dir} ${start_dir} ${config_dir} ${run_name} ${K}
     exit
