@@ -38,7 +38,7 @@ run_name = config_dict['run name']
 
 force_fields = os.path.join(config_dict['auto_md directory'], 'codes', 'sim_codes')
 
-## should really make this into a nested dictionary
+# out directories
 
 start_dir = os.path.join(os.getcwd(), run_name, 'start')
 config_dir = os.path.join(os.getcwd(), run_name, 'config')
@@ -48,10 +48,11 @@ heating_dir = os.path.join(os.getcwd(), run_name, 'heating')
 npt_dir = os.path.join(os.getcwd(), run_name, 'npt')
 prod_dir = os.path.join(os.getcwd(), run_name, 'out')
 
+# other code dirs
+
 tleap_dir = os.path.join(config_dict['auto_md directory'], 'codes', 'tleap')
 pycode_dir = os.path.join(config_dict['auto_md directory'], 'codes', 'python')
-
-sim_script_dir = os.path.join(config_dict['auto_md directory'], 'codes', 'sim_scripts') #config_dict['simulation script directory']
+sim_script_dir = os.path.join(config_dict['auto_md directory'], 'codes', 'sim_scripts')
 
 # run condiitons
 ## can remake this using a list of 'em' and things + f strings
