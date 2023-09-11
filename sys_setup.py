@@ -1,6 +1,8 @@
 import argparse
 import os
 
+from package.utility import md_funcs as mdf
+
 parser = argparse.ArgumentParser(
     prog='system setup',
     description='reads system config and creates the system'
@@ -10,54 +12,50 @@ parser.add_argument('-i', '--config', default='gen_sim_config.in')
 
 args = parser.parse_args()
 
-config_dict = {}
+config_dict = mdf.read_sysconfig(args.config)
 
-try:
-    with open(args.config, 'r') as f:
-        text = [i for i in f.read().split('\n') if '>' in i]
-        for i in text:
-            
-            var = i.strip('>')
-            
-            if len(var.split(':')) > 2:
-                config_dict[var.split(':')[0]] = [j.strip(' ') for j in var.split(':')[1:]]
-            else:
-                config_dict[var.split(':')[0]] = var.split(':')[1].strip(' ')
+# testing check
 
-except:
-    raise FileNotFoundError('File could not be found')
+run = True
+if config_dict['test'] == 'True':
+    run = False
 
 # i'm going to need to split this up like i have the .in structured
 
 # header info
+
 account = config_dict['account']
 email = config_dict['email']
 header_path = os.path.join(config_dict['auto_md directory'], 'codes', 'headers', 'slurm.head')
 
 # pdbs 
+
 pdb_dir = config_dict['pdb directory']
 pdb = config_dict['pdb name']
 run_name = config_dict['run name']
 
 # configs
-force_fields = os.path.join(config_dict['auto_md directory'], 'codes', 'amber_codes', 'sim_codes')
+
+force_fields = os.path.join(config_dict['auto_md directory'], 'codes', 'sim_codes')
 
 ## should really make this into a nested dictionary
 
-start_dir=config_dict['out directories'][0]
-config_dir=config_dict['out directories'][1]
-out_dir=config_dict['out directories'][2]
-em_dir=config_dict['out directories'][3]
-heating_dir=config_dict['out directories'][4]
-npt_dir=config_dict['out directories'][5]
-prod_dir=config_dict['out directories'][6]
+start_dir = os.path.join(os.getcwd(), run_name, 'start')
+config_dir = os.path.join(os.getcwd(), run_name, 'config')
+out_dir = os.path.join(os.getcwd(), run_name, 'out')
+em_dir = os.path.join(os.getcwd(), run_name, 'em')
+heating_dir = os.path.join(os.getcwd(), run_name, 'heating')
+npt_dir = os.path.join(os.getcwd(), run_name, 'npt')
+prod_dir = os.path.join(os.getcwd(), run_name, 'out')
 
 tleap_dir = os.path.join(config_dict['auto_md directory'], 'codes', 'tleap')
 pycode_dir = os.path.join(config_dict['auto_md directory'], 'codes', 'python')
 
-sim_script_dir = os.path.join(config_dict['auto_md directory', 'codes', 'amber_codes', 'sim_scripts']) #config_dict['simulation script directory']
+sim_script_dir = os.path.join(config_dict['auto_md directory'], 'codes', 'sim_scripts') #config_dict['simulation script directory']
 
 # run condiitons
+## can remake this using a list of 'em' and things + f strings
+
 run_cond = {
     'em' : {
         'partition': config_dict['em partition'],
@@ -106,115 +104,79 @@ run_cond = {
     }
 }
 
+# writing system setup bash script
 
-new_text = f"""#!/bin/bash
-# AMBER SYSTEM SETUP
+# formatting system bash script
 
-# directories for pdbs and amber sim codes
+with open(os.path.join(sim_script_dir, 'sys_setup.sh'), 'r') as f:
+    sys_setup = f.read().format(
+        pdb_dir = pdb_dir,
+        force_fields = force_fields,
+        pdb = pdb,
+        run_name = run_name,
+        start_dir = start_dir,
+        config_dir = config_dir,
+        out_dir = out_dir,
+        em_dir = em_dir,
+        heating_dir = heating_dir,
+        npt_dir = npt_dir,
+        prod_dir = prod_dir,
+        tleap_dir = tleap_dir,
+        pycode_dir = pycode_dir
+    )
 
-set -e
+# formatting system setup header
 
-pdb_dir={pdb_dir}
-force_fields={force_fields}
+with open(header_path, 'r') as f:
+    sys_head = f.read().format(
+        md_type = 'system_setup',
+        run_name = pdb,
+        nodes = 1,
+        mem = 32,
+        partition = 'short', # should put something here in the config file
+        time = '0-01:00:00',
+        ntasks_per_node = 10,
+        email = config_dict['email'],
+        account = config_dict['account']
+    )
 
-pdb={pdb}
-run_name={run_name}
 
-# make the run name directory and cd into it
+# writing system setup bash script with header
 
-mkdir {run_name}
-cd {run_name}
-
-# source amber for tleap
-
-source /gpfs/projects/guenzagrp/shared/amber22/amber.sh 
-
-# define new directories for md run and make them 
-
-start_dir={start_dir}
-config_dir={config_dir}
-out_dir={out_dir}
-em_dir={em_dir}
-heating_dir={heating_dir}
-npt_dir={npt_dir}
-prod_dir={prod_dir}
-
-mkdir {start_dir} {config_dir} {out_dir} {em_dir} {heating_dir} {npt_dir} {prod_dir}
-
-# fetch all necessary amber configs
-
-cp {force_fields}/"in.classical_heating"   {config_dir}
-cp {force_fields}/"in.npt"                 {config_dir}
-cp {force_fields}/"prod5ns.in"             {config_dir}
-cp {force_fields}/"sander_min.in"          {config_dir}
-
-# get tleap.in file makers
-
-cp {tleap_dir}/tleap_solvate.py        {config_dir}/tleap_solvate.py
-cp {pycode_dir}/tleap_read_volume.py   {config_dir}/tleap_read_volume.py
-
-# convert pdb to amber pdb
-
-pdb4amber -i {pdb_dir}/{pdb} -o {start_dir}/{run_name}.pdb -y 
-
-# get volume of the box as well as charge
-
-python3 {config_dir}/tleap_solvate.py -p {start_dir}/{run_name}.pdb -c {config_dir} 
-
-tleap -s -f {config_dir}/solvate_tleap.in > {out_dir}/tleap.out
-
-# solvate the box with salt concentrations as determined by previous step
-
-python3 {config_dir}/tleap_read_volume.py -to {out_dir}/tleap.out -c ../{args.config} \\
-    -cond {config_dir} -p {start_dir}/{run_name}.pdb
-
-tleap -s -f {config_dir}/tleap.in
-
-mv leap.log out/
-
-# Energy Minimization
-
-# importing all scripts for running simulations 
-## in the future will allow for custom script integration
-mv ../amber_em.sh               amber_em.sh
-mv ../amber_heating.sh          amber_heating.sh
-mv ../amber_npteq.sh            amber_npteq.sh
-mv ../amber_prod.sh             amber_prod.sh
-mv ../amber_prod_restart.sh     amber_prod_restart.sh
-
-sbatch amber_em.sh {em_dir} {start_dir} {config_dir} \\
-    {run_name} {heating_dir} {npt_dir} {out_dir} {prod_dir}"""
-
+with open(os.path.join(os.getcwd(), 'sys_setup.sh'), 'w') as f:
+    f.write(f'{sys_head}\n{sys_setup}')
 
 # write the amber scripts
 ## we can add the formatting thing here
+
 md_steps = ['em', 'heating', 'npteq', 'prod', 'prod_restart']
+
 for step in md_steps:
-    path = f"{sim_script_dir}_no_head/amber_{step}.sh" # what path amigo
+
+    path = f"{sim_script_dir}/amber_{step}.sh" # what path amigo
 
     with open(f'/{header_path}', 'r') as f: # will need to change header so all parameters are mutable
         header = f.read().format(md_type=step, # ORGANIZE MEEEEEEEEEEEEEEEE
                                 run_name=run_name, 
                                 email=email, 
                                 account=account,
+                                # below here will need to change if we get rid of run_cond
                                 nodes=run_cond[step]['nodes'],
                                 partition=run_cond[step]['partition'],
-                                time=':'.join(run_cond[step]['time']), # because of the colons
+                                time= run_cond[step]['time'],
                                 mem=run_cond[step]['mem'],
                                 ntasks_per_node=run_cond[step]['ntasks_per_node'])
+        
         if 'prod' in step:
             header += f"\n#SBATCH --gpus-per-task={run_cond[step]['gpus-per-task']}"
+
     with open(f'/{path}', 'r') as f:
         text = f.read()
 
     with open(f'amber_{step}.sh', 'w') as w:
         w.write(f"{header}\n{text}")
 
-# write the system setup files
-with open('sys_setup.sh', 'w') as w:
-    w.write(new_text)
-
-if config_dict['start here end there'] in ['t', 'T', 'True', 'true']:
-    os.system(f"scp -r {run_name} {remote_user}@{remote_host}:{config_dict['remote directory']}")
-else:
+if run:
     os.system("bash sys_setup.sh")
+else:
+    print('done')

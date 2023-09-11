@@ -1,32 +1,22 @@
 import argparse
 import os
 
+from package.utility import md_funcs as mdf
+
 parser = argparse.ArgumentParser()
 
-parser.add_argument('-n', '--name', help="name of experiment condition")
-parser.add_argument('-i', '--initial', help="initial trajectory folder # which contains trajectory that we will merge")
-parser.add_argument('-f', '--final', help="final trajectory folder # which contains trajectory that we will merge")
+parser.add_argument('-i', '--initial', 
+                    help="initial trajectory folder # which contains trajectory that we will merge")
+parser.add_argument('-f', '--final', 
+                    help="final trajectory folder # which contains trajectory that we will merge")
 
 args = parser.parse_args()
 
+#### Generating Configuration Dictionary ####
 
-## REPLACE ME WITH AN IMPORTED FUNCTION PLEASE
-config_dict = {}
+config_dict = mdf.read_sysconfig(args.config)
 
-try:
-    with open(args.config, 'r') as f:
-        text = [i for i in f.read().split('\n') if '>' in i]
-        for i in text:
-            
-            var = i.strip('>')
-            
-            if len(var.split(':')) > 2:
-                config_dict[var.split(':')[0]] = [j.strip(' ') for j in var.split(':')[1:]]
-            else:
-                config_dict[var.split(':')[0]] = var.split(':')[1].strip(' ')
-
-except:
-    raise FileNotFoundError('File could not be found')
+#### Defining Directories ####
 
 # current working directory
 working_dir = os.getcwd()
@@ -44,9 +34,9 @@ analysis_directory = os.path.join(config_dict['auto_md directory'], 'codes', 'an
 # path to the headers
 header_path = os.path.join(config_dict['auto_md directory'], 'codes', 'headers', 'slurm.head')
 
+
 start = int(args.initial)
 end = int(args.final)
-
 total_time = (end - start + 1)*5
 
 ## i a m still not a fan of a lot of these variable names
@@ -62,7 +52,10 @@ with open(os.path.join(analysis_directory, 'analysis.sh'), 'r') as f:
     analysis_setup = f.read().format(
         initial = start,
         final = end,
-        directory = working_dir
+        directory = working_dir,
+        fix_pdb_path = os.path.join(config_dict['auto_md directory'], 
+                                    'package', 'utility', 'fix_pdb.py'),
+        pdb = os.path.join(os.getcwd(), protname, 'start', pdb) # this may not be the correct path
     )
 
 ## should make filling out a header a function
@@ -100,7 +93,6 @@ go"""
 with open('combinetraj_test.cpptraj', 'w') as w:
     w.write(combine_traj_text)
 
-
 #Write initial tcl_script
 
 write_trr_text = f"""mol new {topology}
@@ -110,24 +102,6 @@ quit"""
 
 with open('write_trr_test.tcl', 'w') as w:
     w.write(write_trr_text)
-    
-#Write correct_pdb.py
-## i'm coming back to you
-
-correct_pdb_text = f"""# Read in the file
-with open('{pdb_directory}', 'r') as file :
-  filedata = file.read()
-
-# Replace the target string
-filedata = filedata.replace('MG', 'Mg')
-filedata = filedata.replace('ZN', 'Zn')
-
-# Write the file out again
-with open('{pdb}', 'w') as file:
-  file.write(filedata)"""
-
-with open('correct_pdb.py', 'w') as w:
-    w.write(correct_pdb_text)
     
 # Write process_1.sh
 ## using previsouly made header
@@ -147,14 +121,6 @@ with open('process_1.sh', 'w') as f:
     f.write(f'{analysis_header}\n{le4pd_setup}')
 
 #Execute bash script
+## hashed it out here to see if the new sys_setup works
 
-## its a bash script here but they don't queue it with sbatch (even though it does have a header)
-
-os.system("bash run_combinetraj.sh")
-
-
-
-
-
-
-
+#os.system("bash run_combinetraj.sh")

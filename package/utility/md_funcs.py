@@ -20,11 +20,11 @@ def read_sysconfig(config_path):
                 # if there are multiple accepted values 
                 ## in the future might want to have some sort of error handling 
                 ## if the incorrect amount of things are added
-                if len(var.split(':')) > 2:
-                    config_dict[var.split(':')[0]] = [j.strip(' ') for j in var.split(':')[1:]]
+                if len(var.split('|')) > 2:
+                    config_dict[var.split('|')[0]] = [j.strip(' ') for j in var.split('|')[1:]]
                 # if there is only a single value
                 else:
-                    config_dict[var.split(':')[0]] = var.split(':')[1].strip(' ')
+                    config_dict[var.split('|')[0]] = var.split('|')[1].strip(' ')
 
     except:
         raise FileNotFoundError('File could not be found')
@@ -35,6 +35,8 @@ def read_sysconfig(config_path):
     return config_dict
 
 def format_filepath(filepath, delineator='/'):
+    # for the future i think we should make this automatically detect
+    # the delineater in filepaths
     """Formats a filepath seperated by a given delineator
     returns the filepath with the given operatings systems 
     correct format per the users operating system"""
