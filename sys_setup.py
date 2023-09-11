@@ -174,7 +174,7 @@ for step in md_steps:
     with open(f'/{path}', 'r') as f:
         text = f.read()
 
-    with open(f'amber_{step}.sh', 'w') as w:
+    with open(os.path.join(os.getcwd(), f'amber_{step}.sh'), 'w') as w:
         w.write(f"{header}\n{text}")
 
 if run:
