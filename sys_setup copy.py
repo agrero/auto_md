@@ -154,6 +154,11 @@ with open(os.path.join(os.getcwd(), 'sys_setup.sh'), 'w') as f:
 # write the amber scripts
 ## we can add the formatting thing here
 
+
+
+
+
+
 md_steps = ['em', 'heating', 'npteq', 'prod', 'prod_restart']
 
 for step in md_steps:
