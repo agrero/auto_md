@@ -68,5 +68,4 @@ mv ../amber_npteq.sh            amber_npteq.sh
 mv ../amber_prod.sh             amber_prod.sh
 mv ../amber_prod_restart.sh     amber_prod_restart.sh
 
-#sbatch amber_em.sh {em_dir} {start_dir} {config_dir} \\
-#    {run_name} {heating_dir} {npt_dir} {out_dir} {prod_dir}
+sbatch amber_em.sh 

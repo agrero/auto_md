@@ -16,11 +16,19 @@ le4pd_input=    {le4pd_input}
 config_file=    {config_file}
 max_iter=       {max_iter}
 
-nohup sander -O -i {config_dir}/sander_min.in \
-    -o {em_dir}/min.out \
+nohup sander -O -i {config_dir}/in.npt \
+    -o {out_dir}/npt.out \
     -p {start_dir}/{run_name}_solv.parm7 \
-    -c {start_dir}/{run_name}_solv.rst7 \
-    -r {em_dir}/{run_name}_solv.min
+    -c {heating_dir}/{run_name}_md_heat.rst7 \
+    -r {npt_dir}/{run_name}_npt.rst7 \
+    -x {npt_dir}/{run_name}_npt.nc \
+    -inf {npt_dir}/{run_name}_npt.mdinfo
 
-# remember to add the heating copy and run step here
-sbatch amber_heating.sh
+## changet this from being manual later
+cp auto_md/codes/sim_codes/prod5ns.in {config_dir}/prod5ns.in
+
+for (( i=1; i<{max_iter} ; i++))
+do
+    mkdir {prod_dir}/iter$i
+    sbatch amber_prod.sh {prod_dir}/iter$i
+done

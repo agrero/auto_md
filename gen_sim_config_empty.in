@@ -4,6 +4,7 @@
 
 >pdb directory|
 >auto_md directory|
+>run le4pd path|
 
 ####################
 #### File Names ####
@@ -27,6 +28,8 @@
 >contains dna|
 >test|
 >speedrun|
+>max iterations|
+
 
 ################
 #### Header ####

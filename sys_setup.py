@@ -112,9 +112,7 @@ run_cond = {
 # formatting system bash script
 
 with open(os.path.join(sim_script_dir, 'sys_setup.sh'), 'r') as f:
-    sys_setup = f.read()
-
-    sys_setup = sys_setup.format(
+    sys_setup = f.read().format(
         pdb_dir = pdb_dir,
         force_fields = force_fields,
         pdb = pdb,
@@ -143,7 +141,7 @@ with open(header_path, 'r') as f:
         ntasks_per_node = 10,
         email = config_dict['email'],
         account = config_dict['account']
-    )
+        )
 
 
 # writing system setup bash script with header
@@ -156,32 +154,58 @@ with open(os.path.join(os.getcwd(), 'sys_setup.sh'), 'w') as f:
 
 md_steps = ['em', 'heating', 'npteq', 'prod', 'prod_restart']
 
+# for formattable headers
+
 for step in md_steps:
 
-    path = f"{sim_script_dir}/amber_{step}.sh" # what path amigo
+    # checking if speedrun protocol is active
 
-    with open(f'/{header_path}', 'r') as f: # will need to change header so all parameters are mutable
-        header = f.read().format(md_type=step, # ORGANIZE MEEEEEEEEEEEEEEEE
-                                run_name=run_name, 
-                                email=email, 
-                                account=account,
-                                # below here will need to change if we get rid of run_cond
-                                nodes=run_cond[step]['nodes'],
-                                partition=run_cond[step]['partition'],
-                                time= run_cond[step]['time'],
-                                mem=run_cond[step]['mem'],
-                                ntasks_per_node=run_cond[step]['ntasks_per_node'])
-        
-        if 'prod' in step:
-            header += f"\n#SBATCH --gpus-per-task={run_cond[step]['gpus-per-task']}"
+    if step in ['npteq', 'prod'] and config_dict['speedrun'] in ['t', 'T', 'true', 'True', 'TRUE']:
+        script_path = f'{sim_script_dir}/amber_{step}_speed.sh'
+
+    else:
+        script_path = f'{sim_script_dir}/amber_{step}.sh'
+
+    # writing script headers    
+
+    with open(f'{header_path}', 'r') as f:
+
+        header = f.read().format(
+            md_type=step, ## ORGANIZE MEEEEEEEEEEEEEEEE
+            run_name=run_name, 
+            email=email, 
+            account=account,
+            ## below here will need to change if we get rid of run_cond
+            nodes=run_cond[step]['nodes'],
+            partition=run_cond[step]['partition'],
+            time= run_cond[step]['time'],
+            mem=run_cond[step]['mem'],
+            ntasks_per_node=run_cond[step]['ntasks_per_node']
+            )
     
-    with open(f'/{path}', 'r') as f:
-        text = f.read()
+    # writing script body
+    with open(f'{script_path}', 'r') as f:
+        
+        script_body = f.read().format(
+            config_dir = config_dir,
+            em_dir = em_dir,
+            start_dir = start_dir,
+            heating_dir = heating_dir,
+            npt_dir = npt_dir,
+            out_dir = out_dir,
+            sim_codes = force_fields,
+            run_name = run_name,
+            le4pd_input = config_dict['run le4pd path'],
+            config_file = args.config,
+            prod_dir = prod_dir,
+            max_iter = config_dict['max iterations'],
+
+        )
 
     with open(os.path.join(os.getcwd(), f'amber_{step}.sh'), 'w') as w:
-        w.write(f"{header}\n{text}")
+        w.write(f"{header}\n{script_body}")
 
 if run:
     os.system("bash sys_setup.sh")
 else:
-    print('done')
+    print('done, running "bash sys_setup.sh" will start the simulation')

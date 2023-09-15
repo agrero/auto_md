@@ -103,22 +103,27 @@ with open(os.path.join(analysis_dir,'run_combinetraj.sh'), 'w') as w:
 ## works with both our installs
 
 
+
+
 with open(os.path.join(analysis_dir,'combinetraj.cpptraj'), 'w') as w:
-    w.write(f'parm {topology}\n')
-    for i in range(start, end):
-        w.write(f'trajin {protname}/prod/prod_{i}/prod5ns.nc\n')
-    w.write(f'\ntrajout {start}-{end}_{protname}_prod{total_time}ns.nc\ngo')
-
-combine_traj_text = f"""
-parm {topology}
-
-for i={start};i<{end};i++
-    trajin {protname}/prod/prod_$i/prod5ns.nc
+    if config_dict['speedrun'] in ['t', 'T', 'true', 'True', 'TRUE']:
+            
+        combine_traj_text =f"""parm {topology}
+for i=1;i>={config_dict['max iterations']};i++
+    trajin {protname}/prod/iter$i/prod_*/prod5ns.nc
 done
 
 trajout {start}-{end}_{protname}_prod{total_time}ns.nc
 
 go"""
+    else:
+        combine_traj_text = f"""parm {topology}
+trajin {protname}/prod/prod_*/prod5ns.nc
+trajout {start}-{end}_{protname}_prod{total_time}ns.nc
+
+go"""
+    w.write(combine_traj_text)
+
 
 #Write initial tcl_script
 ## i dont like how long this is
@@ -150,6 +155,18 @@ with open(os.path.join(analysis_script_repo, 'le4pd_setup.sh'), 'r') as f:
 
 with open(os.path.join(analysis_dir, 'process_1.sh'), 'w') as f:
     f.write(f'{analysis_header}\n{le4pd_setup}')
+
+# configure running le4pd
+
+with open(os.path.join(config_dict['auto_md directory'], 'codes', 'sim_scripts', 'run_le4pd.sh'), 'r') as f:
+    run_le4pd_text = f.read().format(
+        run_le4pd = config_dict['run le4pd path'],
+        le4pd_inputs = os.path.join(rem_rotation, 'LE4PD_inputs'),
+        run_name = config_dict['run name'] 
+    )
+    
+with open('run_le4pd.sh', 'w') as w:
+    w.write(run_le4pd_text)
 
 #Execute bash script
 ## hashed it out here to see if the new sys_setup works
