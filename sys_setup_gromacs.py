@@ -1,5 +1,8 @@
 import argparse
+from email.errors import HeaderParseError
+import shutil
 import os
+
 
 from package.utility.md_funcs import read_sysconfig
 
@@ -27,6 +30,7 @@ if config_dict['test'] == 'True':
 account = config_dict['account']
 email = config_dict['email']
 header_path = os.path.join(config_dict['auto_md directory'], 'codes', 'headers', 'slurm.head')
+header_dir = os.path.join(config_dict['auto_md directory'], 'codes', 'headers')
 
 # pdbs 
 
@@ -44,9 +48,22 @@ start_dir = os.path.join(os.getcwd(), run_name, 'start')
 config_dir = os.path.join(os.getcwd(), run_name, 'config')
 out_dir = os.path.join(os.getcwd(), run_name, 'out')
 em_dir = os.path.join(os.getcwd(), run_name, 'em')
-heating_dir = os.path.join(os.getcwd(), run_name, 'heating')
 npt_dir = os.path.join(os.getcwd(), run_name, 'npt')
 prod_dir = os.path.join(os.getcwd(), run_name, 'prod')
+
+# writing directories
+
+try:
+    os.mkdir(run_name)
+except:
+    print('that directory already exists silly')
+
+
+for dir in [start_dir, config_dir, out_dir, em_dir, npt_dir, prod_dir]:
+    try:
+        os.mkdir(dir)
+    except:
+        print('that directory already exists silly')
 
 # other code dirs
 
@@ -69,15 +86,6 @@ run_cond = {
         'ntasks_per_node' : config_dict['em ntasks-per-node'],
         'cpus_per_node' : config_dict['em cpus-per-node']
     },
-    'heating' : {
-        'partition': config_dict['heating partition'],
-        'time' : config_dict['heating time'],
-        'mem' : config_dict['heating mem'],
-        'gpus_per_task' : 0, # see comment above in em
-        'nodes' : config_dict['heating cpus-per-node'],
-        'ntasks_per_node' : config_dict['heating ntasks-per-node'],
-        'cpus_per_node' : config_dict['heating cpus-per-node']
-    },
     'npteq' : {
         'partition': config_dict['npteq partition'],
         'time' : config_dict['npteq time'],
@@ -96,7 +104,7 @@ run_cond = {
         'ntasks_per_node' : config_dict['production ntasks-per-node'],
         'cpus_per_node' : config_dict['production cpus-per-node']
     },
-    'prod_restart' : {
+    'restart' : {
         'partition': config_dict['production restart partition'],
         'time' : config_dict['production restart time'],
         'mem' : config_dict['production restart mem'],
@@ -110,103 +118,106 @@ run_cond = {
 # writing system setup bash script
 
 # formatting system bash script
+# list out ion concentrations and types from the config file
 
-with open(os.path.join(sim_script_dir, 'sys_setup.sh'), 'r') as f:
-    sys_setup = f.read().format(
+## this is terrible please change me
+charge_dict = {
+    'MG' : 2,
+    'NA' : 1,
+    'CL' : 1
+}
+
+ion_concentrations = config_dict['ion concentrations']
+ion_types = config_dict['ion types']
+
+
+# format ion components based on how many their are
+
+if type(ion_types) != list:
+    ion_types = ion_types.strip(' ').strip('()').split(',')
+else: 
+    ion_types = [ion.strip(' ').strip('()').split(',') for ion in ion_types]
+
+# adding ions for gromacs setup
+
+add_ions_text = ''
+
+for ndx, ion in enumerate(ion_types):
+    with open(os.path.join(header_dir, 'gromacs_add_ions.sh'), 'r') as f:
+        add_ions = f.read().format(
+            run_name = run_name,
+            start_dir = start_dir,
+            p_ion = ion[0],
+            p_charge = charge_dict[ion[0]],
+            n_ion = ion[1],
+            n_charge = charge_dict[ion[1]],
+            conc = ion_concentrations[ndx]
+        )
+        add_ions_text += f'{add_ions}\n'
+
+# writing the rest of the system setup script
+
+with open(os.path.join(sim_script_dir, 'gromacs_setup.sh'), 'r') as f:
+    setup_text = f.read().format(
         pdb_dir = pdb_dir,
-        force_fields = force_fields,
-        pdb = pdb,
         run_name = run_name,
-        start_dir = start_dir,
-        config_dir = config_dir,
-        out_dir = out_dir,
+        pdb = pdb,
         em_dir = em_dir,
-        heating_dir = heating_dir,
-        npt_dir = npt_dir,
-        prod_dir = prod_dir,
-        tleap_dir = tleap_dir,
-        config_file = args.config
+        start_dir = start_dir,
+        add_ions = add_ions_text
     )
 
-# formatting system setup header
+with open(os.path.join(run_name, 'gromacs_setup.sh'), 'w') as w:
+    w.write(setup_text)
 
-with open(header_path, 'r') as f:
-    sys_head = f.read().format(
-        md_type = 'system_setup',
-        run_name = pdb,
-        nodes = 1,
-        mem = 32,
-        partition = 'short', # should put something here in the config file
-        time = '0-01:00:00',
-        ntasks_per_node = 10,
-        email = config_dict['email'],
-        account = config_dict['account']
-        )
+# moving force fields to their respective directories
+
+for i in ['em', 'prod', 'npt']:
+    shutil.copy(os.path.join(force_fields, f'{i}.mdp'), os.path.join(run_name, i))
 
 
-# writing system setup bash script with header
+##############################
+##### formatting scripts #####
+##############################
 
-with open(os.path.join(os.getcwd(), 'sys_setup.sh'), 'w') as f:
-    f.write(f'{sys_head}\n{sys_setup}')
+gromacs_scripts = [i for i in os.listdir(sim_script_dir) if 'gromacs' in i]
 
-# write the amber scripts
-## we can add the formatting thing here
+for i in gromacs_scripts:
+    # determine what step this is
+    step = i.strip('.sh').split('_')[-1]
 
-md_steps = ['em', 'heating', 'npteq', 'prod', 'prod_restart']
+    ## bit of a time waster here
+    if step == 'setup':
+        continue
 
-# for formattable headers
-
-for step in md_steps:
-
-    # checking if speedrun protocol is active
-
-    if step in ['npteq', 'prod'] and config_dict['speedrun'] in ['t', 'T', 'true', 'True', 'TRUE']:
-        script_path = f'{sim_script_dir}/amber_{step}_speed.sh'
-
-    else:
-        script_path = f'{sim_script_dir}/amber_{step}.sh'
-
-    # writing script headers    
-
-    with open(f'{header_path}', 'r') as f:
-        header = f.read().format(
-            md_type=step, ## ORGANIZE MEEEEEEEEEEEEEEEE
-            run_name=run_name, 
-            email=email, 
-            account=account,
-            ## below here will need to change if we get rid of run_cond
-            nodes=run_cond[step]['nodes'],
-            partition=run_cond[step]['partition'],
-            time= run_cond[step]['time'],
-            mem=run_cond[step]['mem'],
-            ntasks_per_node=run_cond[step]['ntasks_per_node']
-            )
-        # to save you some pain down the line
-        if step in ['prod', 'prod_restart']:
-            header += '#SBATCH --gpus-per-task=1'
-    
-    # writing script body
-    with open(f'{script_path}', 'r') as f:
-        
-        script_body = f.read().format(
-            config_dir = config_dir,
-            em_dir = em_dir,
-            start_dir = start_dir,
-            heating_dir = heating_dir,
-            npt_dir = npt_dir,
-            out_dir = out_dir,
-            sim_codes = force_fields,
+    with open(header_path, 'r') as f:
+        gromacs_header = f.read().format(
+            md_type = step,
             run_name = run_name,
-            le4pd_input = config_dict['run le4pd path'],
-            config_file = args.config,
-            prod_dir = prod_dir,
-            max_iter = config_dict['max iterations'],
+            email = email,
+            account = account,
+            ## below will change if we get rid of run_cond
+            nodes = run_cond[step]['nodes'],
+            partition = run_cond[step]['partition'],
+            time = run_cond[step]['time'],
+            mem = run_cond[step]['mem'],
+            ntasks_per_node = run_cond[step]['ntasks_per_node']
         )
 
-    with open(os.path.join(os.getcwd(), f'amber_{step}.sh'), 'w') as w:
-        w.write(f"{header}\n{script_body}")
+    with open(os.path.join(sim_script_dir, i), 'r') as f:
+        script_text = f.read().format(
+            run_name = run_name,
+            prot_name = run_name,
+            em_dir = em_dir,
+            npt_dir = npt_dir,
+            start_dir = start_dir,
+            prod_dir = prod_dir
+        )
+
+    with open(os.path.join(run_name, f'gromacs_{step}.sh'), 'w') as w:
+        w.write(f'{gromacs_header}\n{script_text}')
 
 if run:
-    os.system("bash sys_setup.sh")
+    os.system(f"bash {os.path.join(os.getcwd(), run_name, 'gromacs_setup.sh')}")
 else:
-    print('done, running "bash sys_setup.sh" will start the simulation')
+    print('done, running "bash gromacs_setup.sh" will start the simulation')
